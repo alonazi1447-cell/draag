@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>دراج — التوصيل الذكي</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--gold:#F5C842;--gold2:#CC9900;--dark:#0B0B10;--dark2:#13131C;--dark3:#1C1C28;--dark4:#242433;--green:#2ECC71;--red:#E74C3C;--orange:#FF6B35;--blue:#3498DB;--purple:#9B59B6;--text:#E8E8F2;--muted:#7777AA;--border:rgba(245,200,66,0.12);--r:14px;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;font-family:'Cairo',sans-serif;background:var(--dark);color:var(--text);overflow:hidden;direction:rtl;font-size:15px;}
+#splash{position:fixed;inset:0;z-index:9999;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.spl-logo{font-size:3.5rem;font-weight:900;color:var(--gold);}
+.spl-sub{color:var(--muted);font-size:.9rem;}
+.spl-bar{width:56px;height:3px;background:var(--dark3);border-radius:3px;overflow:hidden;}
+.spl-bar::after{content:'';display:block;height:100%;background:var(--gold);animation:ldbar 1.6s ease forwards;}
+@keyframes ldbar{from{width:0}to{width:100%}}
+#roleWrap{position:fixed;inset:0;z-index:9998;background:var(--dark);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px;}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:380px;}
+.rb{background:var(--dark3);border:1px solid var(--border);border-radius:18px;padding:22px 12px;text-align:center;cursor:pointer;transition:.25s;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.rb:active{transform:scale(.96);}
+.rb .ic{font-size:2.2rem;}.rb .nm{font-size:.95rem;font-weight:700;}.rb .ds{font-size:.7rem;color:var(--muted);}
+#app{display:none;height:100%;flex-direction:column;}
+#app.on{display:flex;}
+.tb{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.tb-logo{font-size:1.2rem;font-weight:900;color:var(--gold);}
+.tb-badge{font-size:.7rem;padding:3px 10px;border-radius:50px;font-weight:700;}
+.bc{background:rgba(245,200,66,.12);color:var(--gold);}.bm{background:rgba(46,204,113,.12);color:var(--green);}.bd{background:rgba(255,107,53,.12);color:var(--orange);}.ba{background:rgba(155,89,182,.12);color:var(--purple);}
+.tb-back{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--muted);cursor:pointer;font-family:'Cairo',sans-serif;font-size:.78rem;}
+.tabs{display:flex;background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;}
+.tab{flex:1;min-width:60px;padding:11px 4px;text-align:center;font-size:.7rem;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:.2s;white-space:nowrap;}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold);}
+.content{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative;}
+.page{display:none;flex:1;overflow-y:auto;padding:14px;}
+.page.on{display:block;}
+.map-page{display:none;flex:1;flex-direction:column;}
+.map-page.on{display:flex;}
+.card{background:var(--dark3);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px;}
+.card-t{font-size:.68rem;color:var(--muted);font-weight:600;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px;}
+input,textarea,select{width:100%;background:var(--dark4);border:1px solid var(--border);border-radius:10px;padding:11px 13px;font-family:'Cairo',sans-serif;font-size:.88rem;color:var(--text);outline:none;direction:rtl;margin-bottom:8px;}
+input:focus,textarea:focus,select:focus{border-color:var(--gold);}
+select option{background:var(--dark3);}
+.btn{width:100%;padding:13px;border:none;border-radius:11px;font-family:'Cairo',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.btn:active{transform:scale(.97);}.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn-g{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#111;}
+.btn-gr{background:linear-gradient(135deg,var(--green),#27AE60);color:#fff;}
+.btn-r{background:rgba(231,76,60,.1);color:var(--red);border:1px solid rgba(231,76,60,.2);}
+.btn-gh{background:var(--dark4);color:var(--text);border:1px solid var(--border);}
+.btn-sm{padding:7px 14px;width:auto;font-size:.78rem;border-radius:8px;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:50px;font-size:.7rem;font-weight:700;}
+.b-pend{background:rgba(245,200,66,.12);color:var(--gold);}.b-act{background:rgba(46,204,113,.12);color:var(--green);}.b-done{background:rgba(52,152,219,.12);color:var(--blue);}.b-can{background:rgba(231,76,60,.12);color:var(--red);}
+.dot{width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.sc{background:var(--dark3);border:1px solid var(--border);border-radius:11px;padding:12px 8px;text-align:center;}
+.sc-n{font-size:1.5rem;font-weight:900;line-height:1;}.sc-l{font-size:.65rem;color:var(--muted);margin-top:3px;}
+.pi{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.pi:last-child{border:none;}.pi-name{font-size:.88rem;font-weight:600;}.pi-price{font-size:.75rem;color:var(--gold);margin-top:1px;}
+.qc{display:flex;align-items:center;gap:7px;}
+.qb{width:26px;height:26px;border-radius:7px;background:var(--dark4);border:1px solid var(--border);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Cairo',sans-serif;}
+.qn{font-size:.88rem;font-weight:700;min-width:18px;text-align:center;}
+.oi{background:var(--dark3);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:9px;cursor:pointer;transition:.2s;}
+.prg{display:flex;align-items:center;margin:10px 0;}
+.pd{width:8px;height:8px;border-radius:50%;background:var(--dark4);flex-shrink:0;transition:.4s;}
+.pd.dn{background:var(--gold);}.pd.ac{background:var(--green);box-shadow:0 0 6px var(--green);}
+.pl{flex:1;height:3px;background:var(--dark4);border-radius:2px;transition:.4s;}.pl.dn{background:var(--gold);}
+.mo{position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.75);backdrop-filter:blur(5px);display:flex;align-items:flex-end;}
+.mo.hd{display:none;}
+.mb{background:var(--dark2);border-radius:20px 20px 0 0;border:1px solid var(--border);border-bottom:none;padding:20px 16px 28px;width:100%;max-height:88vh;overflow-y:auto;}
+.mh{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}.mt{font-size:1rem;font-weight:800;margin-bottom:14px;}
+.cb{background:var(--dark3);border:1px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;}
+.toast{position:fixed;top:72px;left:12px;right:12px;z-index:8000;background:var(--dark3);border:1px solid var(--border);border-radius:13px;padding:12px 14px;box-shadow:0 8px 32px rgba(0,0,0,.5);transform:translateY(-140px);transition:transform .35s;display:flex;align-items:center;gap:10px;}
+.toast.sh{transform:translateY(0);}
+.ld{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted);font-size:.9rem;gap:10px;}
+.spin{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.dc{display:flex;align-items:center;gap:10px;padding:11px;background:var(--dark4);border-radius:11px;border:1px solid var(--border);margin-bottom:7px;}
+.da{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.1rem;flex-shrink:0;}
+#map,#dMapEl,#aMapEl,#cMap{height:100%;width:100%;}
+.map-wrap{flex:1;position:relative;}
+.stars{display:flex;gap:5px;font-size:1.6rem;cursor:pointer;margin:6px 0;}
+.star{color:var(--dark4);transition:.15s;}.star.on{color:var(--gold);}
+.empty{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty .ei{font-size:2.5rem;margin-bottom:10px;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="spl-logo">⚡ دراج</div>
+  <div class="spl-sub">منصة التوصيل الذكي بالدراجات الهجينة</div>
+  <div class="spl-bar"></div>
+  <div id="splMsg" style="font-size:.75rem;color:var(--muted);margin-top:4px;">جارٍ الاتصال…</div>
+</div>
+
+<div id="roleWrap">
+  <div style="font-size:2.2rem;">⚡</div>
+  <div style="font-size:.85rem;color:var(--muted);">اختر دورك في المنصة</div>
+  <div style="font-size:1.5rem;font-weight:900;margin-top:-8px;">دراج للتوصيل</div>
+  <div class="rg">
+    <div class="rb" onclick="boot('customer')"><div class="ic">👤</div><div class="nm">عميل</div><div class="ds">اطلب من المحلات</div></div>
+    <div class="rb" onclick="boot('merchant')"><div class="ic">🏪</div><div class="nm">تاجر</div><div class="ds">أدِر طلباتك</div></div>
+    <div class="rb" onclick="boot('driver')"><div class="ic">🚴</div><div class="nm">موصّل</div><div class="ds">وصّل واكسب</div></div>
+    <div class="rb" onclick="boot('admin')"><div class="ic">⚙️</div><div class="nm">إدارة</div><div class="ds">أشرف على المنصة</div></div>
+  </div>
+  <div style="font-size:.72rem;color:var(--muted);">الخرج — المملكة العربية السعودية</div>
+</div>
+
+<div id="app">
+  <div class="tb">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="tb-logo">⚡ دراج</div>
+      <div id="roleLabel" class="tb-badge bc">عميل</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div id="connDot" style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div>
+      <button class="tb-back" onclick="exitApp()">← تغيير</button>
+    </div>
+  </div>
+  <div class="content" id="mainArea"></div>
+</div>
+
+<div class="mo hd" id="modal" onclick="modalBg(event)">
+  <div class="mb"><div class="mh"></div><div id="modalBody"></div></div>
+</div>
+
+<div class="toast" id="toast">
+  <div id="toastIco" style="font-size:1.3rem;flex-shrink:0;"></div>
+  <div><div id="toastT" style="font-size:.88rem;font-weight:700;"></div><div id="toastS" style="font-size:.73rem;color:var(--muted);"></div></div>
+</div>
+
+<script>
+const SB_URL='https://ynmbqsrpanslrwnsfsxe.supabase.co';
+const SB_KEY='sb_publishable_xNLtHqpFrviChHhR3piTbA_OQ14ZzGD';
+const {createClient}=supabase;
+const db=createClient(SB_URL,SB_KEY);
+
+const S={role:null,cart:[],storeId:null,stores:[],products:[],drivers:[],map:null,sub:null,driverRow:null,merchantStore:null};
+const ST_LABEL={pending:'انتظار',accepted:'تم القبول',preparing:'جارٍ التجهيز',ready:'جاهز',delivering:'في الطريق',done:'تم التسليم',cancelled:'ملغى'};
+const ST_CLS={pending:'b-pend',accepted:'b-act',preparing:'b-pend',ready:'b-act',delivering:'b-act',done:'b-done',cancelled:'b-can'};
+const ST_STEP={pending:0,accepted:1,preparing:2,ready:3,delivering:4,done:5};
+
+window.onload=async()=>{
+  document.getElementById('splMsg').textContent='جارٍ الاتصال بالخادم…';
+  try{
+    const{data,error}=await db.from('stores').select('id').limit(1);
+    document.getElementById('splMsg').textContent=error?'⚠️ تحقق من الإعداد':'✓ تم الاتصال بنجاح';
+    document.getElementById('connDot').style.background=error?'var(--red)':'var(--green)';
+  }catch(e){document.getElementById('splMsg').textContent='⚠️ خطأ في الاتصال';}
+  setTimeout(()=>{
+    document.getElementById('splash').style.display='none';
+    document.getElementById('roleWrap').style.display='flex';
+  },2000);
+};
+
+async function boot(role){
+  S.role=role;
+  document.getElementById('roleWrap').style.display='none';
+  document.getElementById('app').classList.add('on');
+  const labels={customer:'عميل',merchant:'تاجر',driver:'موصّل',admin:'إدارة'};
+  const cls={customer:'bc',merchant:'bm',driver:'bd',admin:'ba'};
+  const el=document.getElementById('roleLabel');
+  el.textContent=labels[role];el.className='tb-badge '+cls[role];
+  await loadStores();
+  if(role==='customer')renderCustomer();
+  else if(role==='merchant')renderMerchant();
+  else if(role==='driver')renderDriver();
+  else renderAdmin();
+  if(S.sub)S.sub.unsubscribe();
+  S.sub=db.channel('rt-orders').on('postgres_changes',{event:'*',schema:'public',table:'orders'},p=>handleRT(p)).subscribe();
+}
+
+function exitApp(){
+  if(S.sub){S.sub.unsubscribe();S.sub=null;}
+  if(S.map){S.map.remove();S.map=null;}
+  S.cart=[];S.role=null;
+  document.getElementById('app').classList.remove('on');
+  document.getElementById('mainArea').innerHTML='';
+  document.getElementById('roleWrap').style.display='flex';
+}
+
+async function loadStores(){const{data}=await db.from('stores').select('*').eq('is_open',true);S.stores=data||[];}
+async function loadProducts(sid){const{data}=await db.from('products').select('*').eq('store_id',sid).eq('is_available',true);return data||[];}
+async function loadOrders(f={}){
+  let q=db.from('orders').select('*,order_items(*),stores(name,icon,address)').order('created_at',{ascending:false}).limit(50);
+  if(f.store_id)q=q.eq('store_id',f.store_id);
+  if(f.driver_id)q=q.eq('driver_id',f.driver_id);
+  if(f.status)q=q.eq('status',f.status);
+  const{data}=await q;return data||[];
+}
+async function loadDrivers(){const{data}=await db.from('drivers').select('*').order('is_online',{ascending:false});S.drivers=data||[];return S.drivers;}
+
+function handleRT(p){
+  const o=p.new||p.old;if(!o)return;
+  if(S.role==='merchant'&&p.eventType==='INSERT')toast('🔔','طلب جديد!',o.total+' ريال','var(--gold)');
+  if(S.role==='driver'&&p.eventType==='INSERT'&&o.status==='ready')toast('🔔','طلب جاهز للتوصيل!','','var(--orange)');
+  if(S.role==='customer'&&p.eventType==='UPDATE'){
+    const m={accepted:'✅ تم قبول طلبك',preparing:'🔄 جارٍ التجهيز',delivering:'🚴 الموصّل في الطريق!',done:'✅ تم التسليم!'};
+    if(m[o.status])toast('📦',m[o.status],'','var(--green)');
+  }
+}
+
+let toastTmr;
+function toast(ico,title,sub='',color='var(--gold)'){
+  const t=document.getElementById('toast');
+  document.getElementById('toastIco').textContent=ico;
+  document.getElementById('toastT').textContent=title;
+  document.getElementById('toastS').textContent=sub;
+  t.style.borderColor=color;t.classList.add('sh');
+  clearTimeout(toastTmr);toastTmr=setTimeout(()=>t.classList.remove('sh'),3500);
+}
+
+function openModal(html){document.getElementById('modalBody').innerHTML=html;document.getElementById('modal').classList.remove('hd');}
+function closeModal(){document.getElementById('modal').classList.add('hd');}
+function modalBg(e){if(e.target===document.getElementById('modal'))closeModal();}
+
+function initMap(el,lat=24.155,lng=47.318,z=14){
+  if(S.map){S.map.remove();S.map=null;}
+  const m=L.map(el,{zoomControl:false,attributionControl:false}).setView([lat,lng],z);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(m);
+  S.map=m;return m;
+}
+function sMk(icon){return L.divIcon({html:`<div style="background:#1C1C28;border:2px solid #F5C842;border-radius:9px;padding:3px 5px;font-size:1rem;box-shadow:0 3px 10px rgba(0,0,0,.5);">${icon}</div>`,iconSize:[34,34],iconAnchor:[17,34],className:''});}
+function dMk(){return L.divIcon({html:`<div style="background:#F5C842;border:3px solid white;border-radius:50%;width:16px;height:16px;box-shadow:0 0 10px rgba(245,200,66,.8);"></div>`,iconSize:[16,16],iconAnchor:[8,8],className:''});}
+
+function switchTab(pid,btn){
+  btn.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.page,.map-page').forEach(p=>p.classList.remove('on'));
+  const pg=document.getElementById(pid);if(pg)pg.classList.add('on');
+}
+
+function timeAgo(ts){
+  if(!ts)return'—';
+  const d=(Date.now()-new Date(ts).getTime())/1000;
+  if(d<60)return'الآن';if(d<3600)return'منذ '+Math.floor(d/60)+' د';
+  if(d<86400)return'منذ '+Math.floor(d/3600)+' س';return'منذ '+Math.floor(d/86400)+' يوم';
+}
+
+/* ══ CUSTOMER ══ */
+function renderCustomer(){
+  document.getElementById('mainArea').innerHTML=`
+  <div class="tabs">
+    <div class="tab on" onclick="switchTab('cHome',this)">🏠 الرئيسية</div>
+    <div class="tab" onclick="switchTab('cOrders',this);loadCOrders()">📦 طلباتي</div>
+    <div class="tab" onclick="switchTab('cProfile',this)">👤 حسابي</div>
+  </div>
+  <div class="content">
+    <div class="page on" id="cHome">
+      <div style="display:flex;align-items:center;gap:8px;background:var(--dark3);border:1px solid var(--border);border-radius:11px;padding:10px 13px;margin-bottom:13px;">
+        <span>🔍</span>
+        <input placeholder="ابحث عن محل…" style="border:none;background:transparent;padding:0;margin:0;" oninput="filterPills(this.value)">
+      </div>
+      <div class="card-t">المحلات القريبة</div>
+      <div id="storePills" style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:13px;">
+        ${S.stores.map(s=>`<div onclick="openStore('${s.id}')" style="background:var(--dark4);border:1px solid var(--border);border-radius:11px;padding:11px 7px;text-align:center;cursor:pointer;transition:.2s;">
+          <div style="font-size:1.5rem;">${s.icon}</div>
+          <div style="font-size:.72rem;margin-top:4px;">${s.name.split(' ')[0]}</div>
+        </div>`).join('')}
+      </div>
+      <div style="height:220px;border-radius:14px;overflow:hidden;border:1px solid var(--border);">
+        <div id="cMap" style="height:100%;"></div>
+      </div>
+    </div>
+    <div class="page" id="cOrders"><div class="ld" id="cOL"><div class="spin"></div>جارٍ التحميل…</div><div id="cOList"></div></div>
+    <div class="page" id="cProfile">
+      <div style="text-align:center;padding:20px 0;">
+        <div style="width:64px;height:64px;border-radius:50%;background:rgba(245,200,66,.1);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 10px;">👤</div>
+        <div style="font-weight:700;">عميل دراج</div>
+        <div style="font-size:.78rem;color:var(--muted);">الخرج، المملكة العربية السعودية</div>
+      </div>
+      <div class="card">
+        <div class="card-t">بياناتي</div>
+        <input placeholder="الاسم" id="pName">
+        <input placeholder="رقم الجوال" id="pPhone">
+        <input placeholder="العنوان الافتراضي" id="pAddr">
+        <button class="btn btn-g" onclick="toast('✅','تم الحفظ','','var(--green)')">حفظ</button>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>{
+    const map=initMap('cMap');
+    S.stores.forEach(s=>L.marker([s.lat,s.lng],{icon:sMk(s.icon)}).addTo(map).on('click',()=>openStore(s.id)));
+  },150);
+}
+
+function filterPills(q){
+  document.querySelectorAll('#storePills>div').forEach((el,i)=>{
+    el.style.display=(!q||S.stores[i].name.includes(q))?'':'none';
+  });
+}
+
+async function openStore(sid){
+  S.storeId=sid;
+  const store=S.stores.find(s=>s.id===sid);
+  const prods=await loadProducts(sid);
+  S.products=prods;
+  const items=S.cart.filter(i=>i.sid===sid);
+  const total=items.reduce((a,b)=>a+b.p*b.qty,0);
+  const count=items.reduce((a,b)=>a+b.qty,0);
+  openModal(`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="font-size:1.8rem;">${store.icon}</div>
+      <div><div style="font-size:1rem;font-weight:800;">${store.name}</div>
+      <div style="font-size:.72rem;color:var(--muted);">⭐${store.rating} • توصيل ${store.delivery_fee} ريال</div></div>
+    </div>
+    <div id="pList">${prods.map(p=>pRow(p,sid)).join('')}</div>
+    ${count?`<div class="cb"><div><div style="font-size:.7rem;color:var(--muted);">السلة (${count})</div><div style="font-size:1.1rem;font-weight:900;color:var(--gold);">${total} ريال</div></div>
+    <button class="btn btn-g btn-sm" onclick="openCheckout('${sid}')">إتمام الطلب ←</button></div>`:''}
+  `);
+}
+
+function pRow(p,sid){
+  const item=S.cart.find(i=>i.n===p.name&&i.sid===sid);const qty=item?item.qty:0;
+  return`<div class="pi"><div><div class="pi-name">${p.name}</div><div class="pi-price">${p.price} ريال</div></div>
+  <div class="qc">${qty>0?`<button class="qb" onclick="chQ('${p.name}','${sid}',${p.price},-1)">−</button><div class="qn">${qty}</div>`:''}
+  <button class="qb" style="background:rgba(245,200,66,.1);border-color:rgba(245,200,66,.3);color:var(--gold);" onclick="chQ('${p.name}','${sid}',${p.price},1)">+</button>
+  </div></div>`;
+}
+
+function chQ(name,sid,price,delta){
+  let item=S.cart.find(i=>i.n===name&&i.sid===sid);
+  if(!item){S.cart.push({n:name,sid,p:price,qty:0});item=S.cart[S.cart.length-1];}
+  item.qty=Math.max(0,item.qty+delta);
+  if(item.qty===0)S.cart=S.cart.filter(i=>!(i.n===name&&i.sid===sid));
+  openStore(sid);
+}
+
+async function openCheckout(sid){
+  const store=S.stores.find(s=>s.id===sid);
+  const items=S.cart.filter(i=>i.sid===sid);
+  const sub=items.reduce((a,b)=>a+b.p*b.qty,0);
+  const total=sub+store.delivery_fee;
+  openModal(`
+    <div class="mt">تأكيد الطلب</div>
+    <div style="background:var(--dark4);border-radius:11px;padding:12px;margin-bottom:12px;">
+      <div style="font-size:.85rem;font-weight:700;margin-bottom:8px;">${store.icon} ${store.name}</div>
+      ${items.map(i=>`<div style="display:flex;justify-content:space-between;font-size:.83rem;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+        <span>${i.n} ×${i.qty}</span><span style="color:var(--gold);">${i.p*i.qty} ر</span></div>`).join('')}
+    </div>
+    <input placeholder="اسمك الكامل" id="ckN">
+    <input placeholder="رقم جوالك" id="ckP">
+    <input placeholder="عنوان التوصيل" id="ckA" value="الخرج، ">
+    <select id="ckPay" style="margin-bottom:10px;"><option value="cash">💵 نقداً</option><option value="online">💳 إلكتروني</option></select>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px;font-size:.85rem;">
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">المجموع</span><span>${sub} ريال</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">التوصيل</span><span>${store.delivery_fee} ريال</span></div>
+      <div style="height:1px;background:var(--border);margin:3px 0;"></div>
+      <div style="display:flex;justify-content:space-between;font-weight:800;"><span>الإجمالي</span><span style="color:var(--gold);">${total} ريال</span></div>
+    </div>
+    <button class="btn btn-g" id="placeBtn" onclick="placeOrder('${sid}',${total},${store.delivery_fee})">✅ تأكيد — ${total} ريال</button>
+  `);
+}
+
+async function placeOrder(sid,total,fee){
+  const btn=document.getElementById('placeBtn');
+  btn.disabled=true;btn.textContent='جارٍ الإرسال…';
+  const name=document.getElementById('ckN').value||'عميل';
+  const phone=document.getElementById('ckP').value||'—';
+  const addr=document.getElementById('ckA').value||'—';
+  const pay=document.getElementById('ckPay').value;
+  const items=S.cart.filter(i=>i.sid===sid);
+  const{data:order,error}=await db.from('orders').insert({customer_name:name,customer_phone:phone,customer_address:addr,store_id:sid,total,delivery_fee:fee,payment_method:pay,status:'pending'}).select().single();
+  if(error){toast('❌','خطأ',error.message,'var(--red)');btn.disabled=false;btn.textContent=`تأكيد — ${total} ريال`;return;}
+  await db.from('order_items').insert(items.map(i=>({order_id:order.id,product_name:i.n,price:i.p,quantity:i.qty})));
+  S.cart=S.cart.filter(i=>i.sid!==sid);closeModal();
+  toast('✅','تم إرسال طلبك!','جارٍ البحث عن موصّل…','var(--green)');
+}
+
+async function loadCOrders(){
+  document.getElementById('cOL').style.display='flex';
+  document.getElementById('cOList').innerHTML='';
+  const orders=await loadOrders();
+  document.getElementById('cOL').style.display='none';
+  document.getElementById('cOList').innerHTML=orders.length?orders.map(o=>ordCard(o)).join(''):`<div class="empty"><div class="ei">📦</div>لا يوجد طلبات بعد</div>`;
+}
+
+/* ══ MERCHANT ══ */
+async function renderMerchant(){
+  S.merchantStore=S.stores[0]||null;
+  document.getElementById('mainArea').innerHTML=`
+  <div class="tabs">
+    <div class="tab on" onclick="switchTab('mOrd',this);loadMOrd()">📋 الطلبات</div>
+    <div class="tab" onclick="switchTab('mSt',this);loadMSt()">📊 إحصائيات</div>
+    <div class="tab" onclick="switchTab('mPr',this);loadMPr()">🏪 المنتجات</div>
+    <div class="tab" onclick="switchTab('mSet',this)">⚙️ إعدادات</div>
+  </div>
+  <div class="content">
+    <div class="page on" id="mOrd">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-weight:700;font-size:.9rem;">${S.merchantStore?.name||'متجرك'}</div>
+        <div class="badge b-act" id="stBadge" style="cursor:pointer;" onclick="togStore()"><span class="dot"></span>مفتوح</div>
+      </div>
+      <div class="ld" id="mOL"><div class="spin"></div>جارٍ التحميل…</div><div id="mOList"></div>
+    </div>
+    <div class="page" id="mSt"><div class="ld" id="mSL"><div class="spin"></div>جارٍ التحميل…</div><div id="mSCont"></div></div>
+    <div class="page" id="mPr">
+      <button class="btn btn-g" style="margin-bottom:12px;" onclick="addProdMod()">+ منتج جديد</button>
+      <div class="ld" id="mPL"><div class="spin"></div>جارٍ التحميل…</div><div id="mPList"></div>
+    </div>
+    <div class="page" id="mSet">
+      ${S.merchantStore?`<div class="card"><div class="card-t">بيانات المتجر</div>
+        <input id="sN" value="${S.merchantStore.name}">
+        <input id="sPh" value="${S.merchantStore.phone||''}">
+        <input id="sAd" value="${S.merchantStore.address||''}">
+        <input id="sFe" type="number" value="${S.merchantStore.delivery_fee}" placeholder="رسوم التوصيل">
+        <button class="btn btn-g" onclick="saveSet()">حفظ</button></div>`:''}
+    </div>
+  </div>`;
+  loadMOrd();
+}
+
+async function loadMOrd(){
+  if(!S.merchantStore)return;
+  document.getElementById('mOL').style.display='flex';
+  const orders=await loadOrders({store_id:S.merchantStore.id});
+  document.getElementById('mOL').style.display='none';
+  const active=orders.filter(o=>!['done','cancelled'].includes(o.status));
+  const done=orders.filter(o=>o.status==='done');
+  document.getElementById('mOList').innerHTML=(active.length?active.map(o=>mOrdCard(o)).join(''):'<div class="empty"><div class="ei">📋</div>لا يوجد طلبات نشطة</div>')
+    +(done.length?`<div class="card-t" style="margin-top:14px;">مكتملة (${done.length})</div>${done.slice(0,5).map(o=>ordCard(o)).join('')}`:'');
+}
+
+function mOrdCard(o){
+  const bc=o.status==='pending'?'rgba(245,200,66,.35)':'rgba(46,204,113,.25)';
+  return`<div class="card" style="border-color:${bc};">
+    <div style="display:flex;justify-content:space-between;margin-bottom:7px;">
+      <div><div style="font-weight:700;font-size:.9rem;">${o.customer_name}</div>
+      <div style="font-size:.72rem;color:var(--muted);">#${o.id.slice(-6)} • ${timeAgo(o.created_at)}</div></div>
+      <div style="font-size:.95rem;font-weight:900;color:var(--gold);">${o.total} ر</div>
+    </div>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:6px;">${(o.order_items||[]).map(i=>i.product_name+'×'+i.quantity).join(' • ')}</div>
+    <div style="font-size:.75rem;color:var(--muted);margin-bottom:10px;">📍 ${o.customer_address||'—'}</div>
+    ${o.status==='pending'?`<div style="display:flex;gap:7px;">
+      <button class="btn btn-gr btn-sm" style="flex:1;" onclick="updOrd('${o.id}','accepted',loadMOrd)">✓ قبول</button>
+      <button class="btn btn-r btn-sm" style="flex:1;" onclick="updOrd('${o.id}','cancelled',loadMOrd)">✕ رفض</button></div>`:''}
+    ${o.status==='accepted'?`<button class="btn btn-g btn-sm" style="width:100%;" onclick="updOrd('${o.id}','preparing',loadMOrd)">🔄 بدء التجهيز</button>`:''}
+    ${o.status==='preparing'?`<button class="btn btn-gr btn-sm" style="width:100%;" onclick="updOrd('${o.id}','ready',loadMOrd)">📦 جاهز للتوصيل</button>`:''}
+    <div style="margin-top:8px;"><span class="badge ${ST_CLS[o.status]}"><span class="dot"></span>${ST_LABEL[o.status]}</span></div>
+  </div>`;
+}
+
+async function updOrd(id,st,cb){
+  await db.from('orders').update({status:st,updated_at:new Date().toISOString()}).eq('id',id);
+  const m={accepted:'تم القبول',preparing:'جارٍ التجهيز',ready:'جاهز',done:'تم التسليم',cancelled:'تم الرفض'};
+  toast('✅',m[st]||st,'','var(--green)');if(cb)cb();
+}
+
+async function loadMSt(){
+  if(!S.merchantStore)return;
+  document.getElementById('mSL').style.display='flex';
+  const orders=await loadOrders({store_id:S.merchantStore.id});
+  document.getElementById('mSL').style.display='none';
+  const done=orders.filter(o=>o.status==='done');
+  const rev=done.reduce((a,b)=>a+b.total,0);
+  document.getElementById('mSCont').innerHTML=`
+    <div class="stats">
+      <div class="sc"><div class="sc-n" style="color:var(--gold);">${orders.length}</div><div class="sc-l">طلب</div></div>
+      <div class="sc"><div class="sc-n" style="color:var(--green);">${done.length}</div><div class="sc-l">مكتمل</div></div>
+      <div class="sc"><div class="sc-n" style="color:var(--blue);">${rev}</div><div class="sc-l">ريال</div></div>
+    </div>
+    <div class="card"><div class="card-t">آخر الطلبات</div>
+    ${orders.slice(0,6).map(o=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.82rem;">
+      <span>${o.customer_name}</span><span class="badge ${ST_CLS[o.status]}">${ST_LABEL[o.status]}</span><span style="color:var(--gold);">${o.total}ر</span></div>`).join('')}
+    </div>`;
+}
+
+async function loadMPr(){
+  if(!S.merchantStore)return;
+  document.getElementById('mPL').style.display='flex';
+  const prods=await loadProducts(S.merchantStore.id);
+  document.getElementById('mPL').style.display='none';
+  document.getElementById('mPList').innerHTML=prods.length?prods.map(p=>`<div class="pi">
+    <div><div class="pi-name">${p.name}</div><div class="pi-price">${p.price} ريال</div></div>
+    <div style="display:flex;gap:6px;">
+      <button class="qb" onclick="editProdMod('${p.id}','${p.name}',${p.price})">✏️</button>
+      <button class="qb" style="color:var(--red);" onclick="delProd('${p.id}')">🗑</button>
+    </div></div>`).join(''):`<div class="empty"><div class="ei">📦</div>لا يوجد منتجات</div>`;
+}
+
+function addProdMod(){openModal(`<div class="mt">منتج جديد</div><input placeholder="الاسم" id="pnN"><input placeholder="السعر" type="number" id="pnP"><button class="btn btn-g" onclick="saveProd()">إضافة</button>`);}
+async function saveProd(){
+  const n=document.getElementById('pnN').value.trim();const p=parseFloat(document.getElementById('pnP').value);
+  if(!n||!p){toast('⚠️','أدخل الاسم والسعر','','var(--red)');return;}
+  await db.from('products').insert({store_id:S.merchantStore.id,name:n,price:p});
+  closeModal();toast('✅','تمت الإضافة','','var(--green)');loadMPr();
+}
+function editProdMod(id,name,price){openModal(`<div class="mt">تعديل المنتج</div><input id="epN" value="${name}"><input id="epP" type="number" value="${price}"><button class="btn btn-g" onclick="updProd('${id}')">حفظ</button>`);}
+async function updProd(id){
+  await db.from('products').update({name:document.getElementById('epN').value,price:parseFloat(document.getElementById('epP').value)}).eq('id',id);
+  closeModal();toast('✅','تم التعديل','','var(--green)');loadMPr();
+}
+async function delProd(id){await db.from('products').delete().eq('id',id);toast('🗑️','تم الحذف','','var(--red)');loadMPr();}
+async function togStore(){
+  if(!S.merchantStore)return;
+  const ns=!S.merchantStore.is_open;
+  await db.from('stores').update({is_open:ns}).eq('id',S.merchantStore.id);
+  S.merchantStore.is_open=ns;
+  const b=document.getElementById('stBadge');
+  b.className='badge '+(ns?'b-act':'b-can');
+  b.innerHTML=`<span class="dot"></span>${ns?'مفتوح':'مغلق'}`;
+  toast(ns?'🟢':'🔴',ns?'المتجر مفتوح':'المتجر مغلق','',ns?'var(--green)':'var(--red)');
+}
+async function saveSet(){
+  await db.from('stores').update({name:document.getElementById('sN').value,phone:document.getElementById('sPh').value,address:document.getElementById('sAd').value,delivery_fee:parseFloat(document.getElementById('sFe').value)||5}).eq('id',S.merchantStore.id);
+  toast('✅','تم الحفظ','','var(--green)');
+}
+
+/* ══ DRIVER ══ */
+async function renderDriver(){
+  const{data}=await db.from('drivers').select('*').limit(1);S.driverRow=data?.[0]||null;
+  document.getElementById('mainArea').innerHTML=`
+  <div class="tabs">
+    <div class="tab on" onclick="switchTab('dAv',this);loadDAv()">🔔 متاح</div>
+    <div class="tab" onclick="switchTab('dAct',this);loadDAct()">🚴 رحلتي</div>
+    <div class="tab" onclick="switchTab('dMap',this)" id="dMT">🗺️ خريطة</div>
+    <div class="tab" onclick="switchTab('dEr',this);loadDEr()">💰 أرباحي</div>
+  </div>
+  <div class="content">
+    <div class="page on" id="dAv">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-weight:700;">الطلبات الجاهزة</div>
+        <div class="badge b-act" id="dOnBadge" style="cursor:pointer;" onclick="togDOnline()"><span class="dot"></span>متصل</div>
+      </div>
+      <div class="ld" id="dAvL"><div class="spin"></div>جارٍ التحميل…</div><div id="dAvList"></div>
+    </div>
+    <div class="page" id="dAct"><div class="ld" id="dActL"><div class="spin"></div>جارٍ التحميل…</div><div id="dActCont"></div></div>
+    <div class="map-page" id="dMap"><div class="map-wrap"><div id="dMapEl" style="height:100%;"></div></div></div>
+    <div class="page" id="dEr"><div class="ld" id="dErL"><div class="spin"></div>جارٍ التحميل…</div><div id="dErCont"></div></div>
+  </div>`;
+  document.getElementById('dMT').addEventListener('click',()=>{
+    setTimeout(()=>{
+      if(!S.map){const map=initMap('dMapEl');
+        if(S.driverRow)L.marker([S.driverRow.lat,S.driverRow.lng],{icon:dMk()}).addTo(map);
+        S.stores.forEach(s=>L.marker([s.lat,s.lng],{icon:sMk(s.icon)}).addTo(map).bindPopup(s.name));
+      }},100);});
+  if(S.driverRow)await db.from('drivers').update({is_online:true}).eq('id',S.driverRow.id);
+  loadDAv();
+}
+
+async function loadDAv(){
+  document.getElementById('dAvL').style.display='flex';
+  const orders=await loadOrders({status:'ready'});
+  document.getElementById('dAvL').style.display='none';
+  document.getElementById('dAvList').innerHTML=orders.length?orders.map(o=>`
+    <div class="card" style="border-color:rgba(255,107,53,.25);">
+      <div style="display:flex;justify-content:space-between;margin-bottom:7px;">
+        <div style="font-weight:700;">${o.stores?.icon||'🏪'} ${o.stores?.name||'محل'}</div>
+        <div style="font-size:1.1rem;font-weight:900;color:var(--orange);">+${Math.round(o.total*.15)} ريال</div>
+      </div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:4px;">📦 من: ${o.stores?.name||'—'}</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:12px;">📍 إلى: ${o.customer_address||'—'}</div>
+      <button class="btn btn-g" onclick="acceptDel('${o.id}')">✓ قبول الطلب</button>
+    </div>`).join(''):`<div class="empty"><div class="ei">🚴</div>لا يوجد طلبات جاهزة<br><span style="font-size:.78rem;">ابق متصلاً</span></div>`;
+}
+
+async function acceptDel(oid){
+  const did=S.driverRow?.id;
+  await db.from('orders').update({status:'delivering',driver_id:did||null,updated_at:new Date().toISOString()}).eq('id',oid);
+  if(did)await db.from('drivers').update({is_busy:true}).eq('id',did);
+  toast('✅','تم قبول الطلب!','توجّه لاستلامه','var(--green)');
+  loadDAv();
+  // switch to active tab
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.page,.map-page').forEach(p=>p.classList.remove('on'));
+  document.querySelector('[onclick*="dAct"]').classList.add('on');
+  document.getElementById('dAct').classList.add('on');
+  loadDAct();
+}
+
+async function loadDAct(){
+  document.getElementById('dActL').style.display='flex';
+  const did=S.driverRow?.id;
+  let r;
+  if(did)r=await db.from('orders').select('*,order_items(*),stores(name,icon,address)').eq('driver_id',did).eq('status','delivering').limit(1);
+  else r=await db.from('orders').select('*,order_items(*),stores(name,icon,address)').eq('status','delivering').limit(1);
+  document.getElementById('dActL').style.display='none';
+  const orders=r?.data||[];
+  if(!orders.length){document.getElementById('dActCont').innerHTML=`<div class="empty"><div class="ei">🏁</div>لا يوجد رحلة نشطة</div>`;return;}
+  const o=orders[0];
+  document.getElementById('dActCont').innerHTML=`
+    <div class="card" style="border-color:rgba(46,204,113,.3);">
+      <div style="font-size:.8rem;font-weight:700;color:var(--green);margin-bottom:10px;">🚴 رحلتك الحالية</div>
+      <div style="font-size:.9rem;font-weight:700;">${o.stores?.icon||'🏪'} ${o.stores?.name||'المتجر'}</div>
+      <div style="font-size:.75rem;color:var(--muted);margin:4px 0;">📦 استلام من: ${o.stores?.address||'—'}</div>
+      <div style="font-size:.75rem;color:var(--muted);margin-bottom:10px;">📍 توصيل إلى: ${o.customer_address||'—'}</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:12px;">👤 ${o.customer_name} • ${o.customer_phone||'—'}</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="btn btn-gh btn-sm" onclick="toast('📞','جارٍ الاتصال…','${o.customer_name}')">📞 اتصل</button>
+        <button class="btn btn-gh btn-sm" onclick="toast('🗺️','افتح خرائط Google','')">🗺️ ملاحة</button>
+      </div>
+      <button class="btn btn-gr" onclick="completeDel('${o.id}',${Math.round(o.total*.15)})">✅ تم التسليم</button>
+    </div>`;
+}
+
+async function completeDel(oid,reward){
+  await db.from('orders').update({status:'done',updated_at:new Date().toISOString()}).eq('id',oid);
+  if(S.driverRow){
+    await db.from('drivers').update({is_busy:false,total_trips:(S.driverRow.total_trips||0)+1,total_earnings:(S.driverRow.total_earnings||0)+reward}).eq('id',S.driverRow.id);
+    S.driverRow.total_trips=(S.driverRow.total_trips||0)+1;S.driverRow.total_earnings=(S.driverRow.total_earnings||0)+reward;
+  }
+  toast('🎉',`تم التسليم! +${reward} ريال`,'','var(--green)');loadDAct();loadDAv();
+}
+
+async function loadDEr(){
+  document.getElementById('dErL').style.display='flex';
+  const dr=S.driverRow;
+  document.getElementById('dErL').style.display='none';
+  document.getElementById('dErCont').innerHTML=`
+    <div class="stats">
+      <div class="sc"><div class="sc-n" style="color:var(--gold);">${dr?.total_trips||0}</div><div class="sc-l">رحلة</div></div>
+      <div class="sc"><div class="sc-n" style="color:var(--green);">${dr?.total_earnings||0}</div><div class="sc-l">ريال</div></div>
+      <div class="sc"><div class="sc-n" style="color:var(--blue);">${dr?.rating||5}</div><div class="sc-l">تقييم</div></div>
+    </div>
+    <div class="card"><div class="card-t">طلب سحب</div>
+      <input type="number" placeholder="المبلغ المطلوب" id="wA">
+      <button class="btn btn-g" onclick="reqWithdraw()">سحب الأرباح</button>
+      <div style="font-size:.73rem;color:var(--muted);margin-top:6px;">المتاح: <span style="color:var(--gold);">${dr?.total_earnings||0} ريال</span></div>
+    </div>`;
+}
+async function reqWithdraw(){const a=document.getElementById('wA').value;if(!a||a<=0){toast('⚠️','أدخل مبلغاً','','var(--red)');return;}toast('💰',`تم طلب سحب ${a} ريال`,'خلال 24 ساعة','var(--green)');}
+async function togDOnline(){
+  if(!S.driverRow)return;
+  const ns=!S.driverRow.is_online;
+  await db.from('drivers').update({is_online:ns}).eq('id',S.driverRow.id);
+  S.driverRow.is_online=ns;
+  const b=document.getElementById('dOnBadge');
+  b.className='badge '+(ns?'b-act':'b-can');
+  b.innerHTML=`<span class="dot"></span>${ns?'متصل':'غير متصل'}`;
+  toast(ns?'🟢':'🔴',ns?'أنت متصل':'غير متصل','',ns?'var(--green)':'var(--red)');
+}
+
+/* ══ ADMIN ══ */
+async function renderAdmin(){
+  document.getElementById('mainArea').innerHTML=`
+  <div class="tabs">
+    <div class="tab on" onclick="switchTab('aOv',this);loadAOv()">📊 لوحة</div>
+    <div class="tab" onclick="switchTab('aDr',this);loadADr()">🚴 موصّلون</div>
+    <div class="tab" onclick="switchTab('aSt',this);loadASt()">🏪 محلات</div>
+    <div class="tab" onclick="switchTab('aOr',this);loadAOr()">📦 طلبات</div>
+    <div class="tab" onclick="switchTab('aMap',this)" id="aMT">🗺️ خريطة</div>
+  </div>
+  <div class="content">
+    <div class="page on" id="aOv"><div class="ld"><div class="spin"></div>جارٍ التحميل…</div></div>
+    <div class="page" id="aDr"><div class="ld"><div class="spin"></div>جارٍ التحميل…</div></div>
+    <div class="page" id="aSt"><div class="ld"><div class="spin"></div>جارٍ التحميل…</div></div>
+    <div class="page" id="aOr"><div class="ld"><div class="spin"></div>جارٍ التحميل…</div></div>
+    <div class="map-page" id="aMap"><div class="map-wrap"><div id="aMapEl" style="height:100%;"></div></div></div>
+  </div>`;
+  document.getElementById('aMT').addEventListener('click',()=>{
+    setTimeout(async()=>{
+      if(!S.map){const map=initMap('aMapEl',24.157,47.318,13);
+        S.stores.forEach(s=>L.marker([s.lat,s.lng],{icon:sMk(s.icon)}).addTo(map).bindPopup(s.name));
+        const{data:drs}=await db.from('drivers').select('*').eq('is_online',true);
+        (drs||[]).forEach(d=>L.marker([d.lat,d.lng],{icon:dMk()}).addTo(map).bindPopup(d.name));
+      }},100);});
+  loadAOv();
+}
+
+async function loadAOv(){
+  const[oR,dR]=await Promise.all([db.from('orders').select('*').order('created_at',{ascending:false}).limit(100),db.from('drivers').select('*')]);
+  const orders=oR.data||[];const drivers=dR.data||[];
+  const done=orders.filter(o=>o.status==='done');const rev=done.reduce((a,b)=>a+b.total,0);
+  document.getElementById('aOv').innerHTML=`
+    <div class="stats">
+      <div class="sc"><div class="sc-n" style="color:var(--gold);">${orders.length}</div><div class="sc-l">طلب</div></div>
+      <div class="sc"><div class="sc-n" style="color:var(--green);">${Math.round(rev)}</div><div class="sc-l">ريال</div></div>
+      <div class="sc"><div class="sc-n" style="color:var(--orange);">${drivers.filter(d=>d.is_online).length}</div><div class="sc-l">موصّل نشط</div></div>
+    </div>
+    <div class="stats" style="margin-top:-2px;">
+      <div class="sc"><div class="sc-n" style="color:var(--blue);">${S.stores.length}</div><div class="sc-l">محل</div></div>
+      <div class="sc"><div class="sc-n" style="color:var(--purple);">${done.length}</div><div class="sc-l">مكتملة</div></div>
+      <div class="sc"><div class="sc-n" style="color:var(--red);">${orders.filter(o=>o.status==='pending').length}</div><div class="sc-l">انتظار</div></div>
+    </div>
+    <div class="card"><div class="card-t">آخر الطلبات</div>
+    ${orders.slice(0,8).map(o=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.8rem;" onclick="viewOrder('${o.id}')">
+      <span style="color:var(--muted);">#${o.id.slice(-6)}</span><span>${o.customer_name}</span>
+      <span class="badge ${ST_CLS[o.status]}">${ST_LABEL[o.status]}</span>
+      <span style="color:var(--gold);">${o.total}ر</span></div>`).join('')}
+    </div>`;
+}
+
+async function loadADr(){
+  const{data}=await db.from('drivers').select('*').order('is_online',{ascending:false});
+  const drivers=data||[];
+  document.getElementById('aDr').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-weight:700;">${drivers.length} موصّل</div>
+      <button class="btn btn-g btn-sm" onclick="addDrvMod()">+ إضافة</button>
+    </div>
+    ${drivers.map(d=>`<div class="dc">
+      <div class="da" style="background:rgba(255,107,53,.1);color:var(--orange);">${d.name[0]}</div>
+      <div style="flex:1;"><div style="font-weight:700;font-size:.88rem;">${d.name}</div>
+      <div style="font-size:.7rem;color:var(--muted);">⭐${d.rating} • ${d.total_trips} رحلة • ${d.vehicle||'دراجة'}</div></div>
+      <div class="badge ${d.is_online?(d.is_busy?'b-pend':'b-act'):'b-can'}">
+        <span class="dot"></span>${d.is_online?(d.is_busy?'يوصّل':'جاهز'):'غير متصل'}
+      </div></div>`).join('')}`;
+}
+
+function addDrvMod(){openModal(`<div class="mt">إضافة موصّل</div>
+  <input placeholder="الاسم الكامل" id="adN">
+  <input placeholder="رقم الجوال" id="adPh">
+  <select id="adV" style="margin-bottom:8px;"><option>دراجة هجينة</option><option>دراجة كهربائية</option><option>دراجة عادية</option></select>
+  <button class="btn btn-g" onclick="saveDrv()">إضافة</button>`);}
+async function saveDrv(){
+  const n=document.getElementById('adN').value.trim();
+  if(!n){toast('⚠️','أدخل الاسم','','var(--red)');return;}
+  await db.from('drivers').insert({name:n,phone:document.getElementById('adPh').value,vehicle:document.getElementById('adV').value,lat:24.155+Math.random()*.02,lng:47.315+Math.random()*.02});
+  closeModal();toast('✅',`تمت إضافة ${n}`,'','var(--green)');loadADr();
+}
+
+async function loadASt(){
+  const{data}=await db.from('stores').select('*');
+  document.getElementById('aSt').innerHTML=`<div style="font-weight:700;margin-bottom:10px;">${(data||[]).length} محل</div>`
+    +(data||[]).map(s=>`<div class="dc"><div style="font-size:1.5rem;">${s.icon}</div>
+    <div style="flex:1;"><div style="font-weight:700;font-size:.88rem;">${s.name}</div>
+    <div style="font-size:.7rem;color:var(--muted);">${s.category||'—'} • توصيل ${s.delivery_fee} ريال</div></div>
+    <div class="badge ${s.is_open?'b-act':'b-can'}"><span class="dot"></span>${s.is_open?'مفتوح':'مغلق'}</div></div>`).join('');
+}
+
+async function loadAOr(){
+  const orders=await loadOrders();
+  document.getElementById('aOr').innerHTML=orders.length?orders.map(o=>ordCard(o)).join(''):`<div class="empty"><div class="ei">📦</div>لا يوجد طلبات</div>`;
+}
+
+/* ══ SHARED ══ */
+function ordCard(o){
+  const step=ST_STEP[o.status]||0;
+  return`<div class="oi" onclick="viewOrder('${o.id}')">
+    <div style="display:flex;justify-content:space-between;margin-bottom:7px;">
+      <div><div style="font-weight:700;font-size:.9rem;">${o.stores?.icon||'🏪'} ${o.stores?.name||o.customer_name||'طلب'}</div>
+      <div style="font-size:.72rem;color:var(--muted);">#${o.id.slice(-6)} • ${timeAgo(o.created_at)}</div></div>
+      <div class="badge ${ST_CLS[o.status]||'b-done'}"><span class="dot"></span>${ST_LABEL[o.status]||o.status}</div>
+    </div>
+    <div class="prg">
+      ${[0,1,2,3,4].map(i=>`<div class="pd ${i<step?'dn':i===step?'ac':''}"></div>${i<4?`<div class="pl ${i<step?'dn':''}"></div>`:''}`).join('')}
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;">
+      <span style="font-size:.7rem;color:var(--muted);">${o.customer_name||'—'}</span>
+      <span style="font-size:.9rem;font-weight:700;color:var(--gold);">${o.total} ريال</span>
+    </div></div>`;
+}
+
+async function viewOrder(id){
+  const{data:o}=await db.from('orders').select('*,order_items(*),stores(name,icon,address)').eq('id',id).single();
+  if(!o)return;
+  openModal(`
+    <div class="mt">${o.stores?.icon||'📦'} ${o.stores?.name||'طلب'}</div>
+    <div class="badge ${ST_CLS[o.status]}" style="margin-bottom:12px;"><span class="dot"></span>${ST_LABEL[o.status]}</div>
+    <div style="background:var(--dark4);border-radius:10px;padding:12px;margin-bottom:12px;">
+      ${(o.order_items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.83rem;">
+        <span>${i.product_name} ×${i.quantity}</span><span style="color:var(--gold);">${i.price*i.quantity} ر</span></div>`).join('')}
+    </div>
+    <div style="font-size:.83rem;color:var(--muted);margin-bottom:5px;">👤 ${o.customer_name} • ${o.customer_phone||'—'}</div>
+    <div style="font-size:.83rem;color:var(--muted);margin-bottom:12px;">📍 ${o.customer_address||'—'}</div>
+    <div style="display:flex;justify-content:space-between;font-weight:800;font-size:.95rem;margin-bottom:14px;">
+      <span>الإجمالي</span><span style="color:var(--gold);">${o.total} ريال</span>
+    </div>
+    ${o.status==='done'?`<div class="card-t">قيّم التجربة</div>
+    <div class="stars" id="rSt">${[1,2,3,4,5].map(i=>`<span class="star ${i<=4?'on':''}" onclick="rateSt(${i})">★</span>`).join('')}</div>
+    <button class="btn btn-gh btn-sm" style="width:100%;" onclick="submitR('${o.id}')">إرسال التقييم</button>`:''}
+    <button class="btn btn-gh" style="margin-top:10px;" onclick="closeModal()">إغلاق</button>
+  `);
+}
+function rateSt(n){document.querySelectorAll('#rSt .star').forEach((s,i)=>s.classList.toggle('on',i<n));window._rv=n;}
+async function submitR(oid){await db.from('ratings').insert({order_id:oid,stars:window._rv||4});closeModal();toast('⭐','شكراً على تقييمك!','','var(--gold)');}
+</script>
+</body>
+</html>
