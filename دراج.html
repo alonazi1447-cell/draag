@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>دراج - توصيل سريع</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -836,12 +836,35 @@ function heartbeat(){
 }
 
 // ===== INIT =====
-// ===== SPLASH — يختفي بعد ثانيتين =====
+// ===== SPLASH — يختفي فوراً لا ينتظر أي مكتبة =====
 function hideSplash(){
   const sp=document.getElementById('splash');
   if(sp){sp.style.opacity='0';setTimeout(()=>{sp.style.display='none';const hs=document.getElementById('homeScreen');if(hs)hs.style.display='block';},400);}
 }
-setTimeout(hideSplash, 2000);
+// يختفي بعد ثانية واحدة بغض النظر عن أي شيء
+setTimeout(hideSplash, 1200);
+
+// تحميل Supabase بشكل غير متزامن — لا يعطل الصفحة
+function loadSupabase(){
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+  s.onload=()=>{initSupabase();console.log('Supabase loaded');};
+  s.onerror=()=>{console.warn('Supabase failed to load — offline mode');DB_READY=false;};
+  document.head.appendChild(s);
+}
+// تحميل Leaflet بشكل غير متزامن
+function loadLeaflet(){
+  if(window.L)return; // already loaded
+  const css=document.createElement('link');
+  css.rel='stylesheet';
+  css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+  document.head.appendChild(css);
+  const s=document.createElement('script');
+  s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+  document.head.appendChild(s);
+}
+// تحميل المكتبات بعد ظهور الصفحة
+window.addEventListener('load',()=>{loadSupabase();loadLeaflet();});
 
 // ===== INIT =====
 initStores();
@@ -3076,7 +3099,7 @@ function toast(msg,type=''){
 </script>
 
 <!-- External scripts loaded AFTER page renders — faster splash -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onload="initSupabase()"></script>
+
+
 </body>
 </html>
