@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>دراج - توصيل سريع</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -588,18 +586,18 @@ let _supa = null;
 let DB_READY = false;
 
 function initSupabase(){
+  // Hide splash immediately when called (Supabase loaded)
+  hideSplash();
   if(SUPA_URL===''||SUPA_KEY===''){
-    console.warn('⚠️ Supabase not configured — offline mode (single device only)');
-    showConfigBanner();
+    console.warn('⚠️ Supabase not configured — offline mode');
     return;
   }
   try{
     _supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
     DB_READY = true;
-    console.log('✅ Supabase connected — multi-device mode');
-    // Setup realtime listener for orders
+    console.log('✅ Supabase connected');
     _supa.channel('orders_rt')
-      .on('postgres_changes',{event:'*',schema:'public',table:'drj_orders'}, payload=>{
+      .on('postgres_changes',{event:'*',schema:'public',table:'drj_orders'},payload=>{
         handleRealtimeOrder(payload);
       }).subscribe();
   }catch(e){
@@ -838,13 +836,12 @@ function heartbeat(){
 }
 
 // ===== INIT =====
-initSupabase();
-
-// ===== SPLASH — يختفي بعد ثانيتين بغض النظر عن Supabase =====
-setTimeout(()=>{
+// ===== SPLASH — يختفي بعد ثانيتين =====
+function hideSplash(){
   const sp=document.getElementById('splash');
-  if(sp){sp.style.opacity='0';setTimeout(()=>{sp.style.display='none';document.getElementById('homeScreen').style.display='block';},400);}
-},2000);
+  if(sp){sp.style.opacity='0';setTimeout(()=>{sp.style.display='none';const hs=document.getElementById('homeScreen');if(hs)hs.style.display='block';},400);}
+}
+setTimeout(hideSplash, 2000);
 
 // ===== INIT =====
 initStores();
@@ -3077,5 +3074,9 @@ function toast(msg,type=''){
   t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);
 }
 </script>
+
+<!-- External scripts loaded AFTER page renders — faster splash -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onload="initSupabase()"></script>
 </body>
 </html>
