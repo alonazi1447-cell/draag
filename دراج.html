@@ -840,11 +840,11 @@ function heartbeat(){
 // ===== INIT =====
 initSupabase();
 
-// ===== SPLASH =====
+// ===== SPLASH — يختفي بعد ثانيتين بغض النظر عن Supabase =====
 setTimeout(()=>{
-  document.getElementById('splash').style.opacity='0';
-  setTimeout(()=>{document.getElementById('splash').style.display='none';document.getElementById('homeScreen').style.display='block';},500);
-},1800);
+  const sp=document.getElementById('splash');
+  if(sp){sp.style.opacity='0';setTimeout(()=>{sp.style.display='none';document.getElementById('homeScreen').style.display='block';},400);}
+},2000);
 
 // ===== INIT =====
 initStores();
@@ -932,20 +932,35 @@ async function doReg(){
   setTimeout(()=>enterApp({name,phone,role:'client'}),500);
 }
 
+// Helper: Supabase query with timeout
+async function supaQuery(queryFn, timeoutMs=5000){
+  return Promise.race([
+    queryFn(),
+    new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),timeoutMs))
+  ]);
+}
+
 async function doLogin(){
   const phone=document.getElementById('lPhone').value.trim();
   if(!phone){toast('أدخل رقم الجوال','err');return;}
   if(DB_READY){
-    const{data,error}=await _supa.from('drj_users').select('*').eq('phone',phone).eq('role','client').maybeSingle();
-    if(!data){toast('غير مسجّل — سجّل حساباً جديداً','err');return;}
-    toast('أهلاً '+data.name+' 👋');
-    setTimeout(()=>enterApp({name:data.name,phone:data.phone,role:'client'}),500);
+    try{
+      const{data}=await supaQuery(()=>_supa.from('drj_users').select('name,phone').eq('phone',phone).eq('role','client').maybeSingle());
+      if(!data){toast('غير مسجّل — سجّل حساباً جديداً','err');return;}
+      toast('أهلاً '+data.name+' 👋');
+      enterApp({name:data.name,phone:data.phone,role:'client'});
+    }catch(e){
+      // Timeout — try localStorage fallback
+      const cls=gClients();const user=cls.find(c=>c.phone===phone);
+      if(!user){toast('تعذّر الاتصال — تحقق من الإنترنت','err');return;}
+      toast('أهلاً '+user.name+' 👋 (وضع غير متصل)');
+      enterApp({name:user.name,phone:user.phone,role:'client'});
+    }
   } else {
-    const cls=gClients();
-    const user=cls.find(c=>c.phone===phone);
+    const cls=gClients();const user=cls.find(c=>c.phone===phone);
     if(!user){toast('غير مسجّل، سجّل أولاً','err');return;}
     toast('أهلاً '+user.name+' 👋');
-    setTimeout(()=>enterApp({name:user.name,phone:user.phone,role:'client'}),500);
+    enterApp({name:user.name,phone:user.phone,role:'client'});
   }
 }
 let selStoreId=null;
@@ -986,22 +1001,30 @@ async function doStoreLogin(){
   const phone=document.getElementById('stPh').value.trim();
   const pin=document.getElementById('stPin').value.trim()||'0000';
   if(phone.length<9){toast('رقم غير صحيح','err');return;}
-  let storeName=selStoreId;
-  if(DB_READY){
-    const{data:st}=await _supa.from('drj_stores').select('*').eq('id',selStoreId).maybeSingle();
-    if(!st){toast('المحل غير موجود','err');return;}
-    if(st.pin&&st.pin!==pin){toast('الرقم السري غير صحيح','err');return;}
-    storeName=st.name;
-    // Update store phone
-    await _supa.from('drj_stores').update({phone}).eq('id',selStoreId);
-  } else {
-    const pins=gSPins();const saved=pins[selStoreId]||'0000';
-    if(pin!==saved){toast('الرقم السري غير صحيح','err');return;}
+  // Try local first for speed
+  const localStores=gStores();
+  const localStore=localStores.find(s=>s.id===selStoreId);
+  const localPin=gSPins()[selStoreId]||localStore?.pin||'0000';
+  if(localStore&&pin===localPin){
     const phones=gSPhones();phones[selStoreId]=phone;sSPhones(phones);
-    storeName=gStores().find(s=>s.id===selStoreId)?.name||selStoreId;
+    toast('أهلاً '+localStore.name+' 👋');
+    enterApp({name:localStore.name,phone,role:'store',storeId:selStoreId});
+    // Sync phone to DB in background
+    if(DB_READY)_supa.from('drj_stores').update({phone}).eq('id',selStoreId).then(()=>{});
+    return;
   }
-  toast('أهلاً '+storeName+' 👋');
-  setTimeout(()=>enterApp({name:storeName,phone,role:'store',storeId:selStoreId}),500);
+  // Fallback: check Supabase
+  if(DB_READY){
+    try{
+      const{data:st}=await supaQuery(()=>_supa.from('drj_stores').select('id,name,pin').eq('id',selStoreId).maybeSingle());
+      if(!st){toast('المحل غير موجود','err');return;}
+      if(st.pin&&st.pin!=='0000'&&st.pin!==pin){toast('الرقم السري غير صحيح','err');return;}
+      toast('أهلاً '+st.name+' 👋');
+      enterApp({name:st.name,phone,role:'store',storeId:selStoreId});
+    }catch(e){toast('تعذّر الاتصال — تحقق من الإنترنت','err');}
+  } else {
+    toast('الرقم السري غير صحيح','err');
+  }
 }
 
 async function doDrvLogin(){
@@ -1009,18 +1032,28 @@ async function doDrvLogin(){
   const pin=document.getElementById('dPin').value.trim();
   if(phone.length<9){toast('رقم غير صحيح','err');return;}
   if(!pin){toast('أدخل الرقم السري','err');return;}
+  // Try local cache first
+  const localDrvs=gDrivers();
+  const localDrv=localDrvs.find(d=>d.phone===phone&&d.pin===pin);
+  if(localDrv){
+    toast('أهلاً '+localDrv.name+' 🚲');
+    enterApp({name:localDrv.name,phone:localDrv.phone,role:'driver'});
+    return;
+  }
+  // Check Supabase
   if(DB_READY){
-    const{data,error}=await _supa.from('drj_users').select('*').eq('phone',phone).eq('role','driver').maybeSingle();
-    if(!data){toast('غير مسجّل — راجع الإدارة','err');return;}
-    if(data.pin!==pin){toast('الرقم السري غير صحيح','err');return;}
-    toast('أهلاً '+data.name+' 🚲');
-    setTimeout(()=>enterApp({name:data.name,phone:data.phone,role:'driver',photo:data.photo}),500);
+    try{
+      const{data}=await supaQuery(()=>_supa.from('drj_users').select('*').eq('phone',phone).eq('role','driver').maybeSingle());
+      if(!data){toast('غير مسجّل — راجع الإدارة','err');return;}
+      if(data.pin!==pin){toast('الرقم السري غير صحيح','err');return;}
+      // Cache locally
+      const drvs=gDrivers();
+      if(!drvs.find(d=>d.phone===phone)){drvs.push({name:data.name,phone:data.phone,pin:data.pin,earned:0});sDrivers(drvs);}
+      toast('أهلاً '+data.name+' 🚲');
+      enterApp({name:data.name,phone:data.phone,role:'driver',photo:data.photo});
+    }catch(e){toast('تعذّر الاتصال — تحقق من الإنترنت','err');}
   } else {
-    const drvs=gDrivers();const drv=drvs.find(d=>d.phone===phone);
-    if(!drv){toast('غير مسجّل، راجع الإدارة','err');return;}
-    if(drv.pin!==pin){toast('الرقم السري غير صحيح','err');return;}
-    toast('أهلاً '+drv.name+' 🚲');
-    setTimeout(()=>enterApp({name:drv.name,phone:drv.phone,role:'driver'}),500);
+    toast('غير مسجّل — راجع الإدارة','err');
   }
 }
 
@@ -1033,14 +1066,15 @@ function doAdminLogin(){
 // ===== ENTER APP =====
 function enterApp(user){
   S.user=user;S.role=user.role;
-  // Reload data from Supabase
-  reloadOrders();
-  if(DB_READY) loadStoresFromDB().then(()=>{if(S.role==='client')renderStoresGrid();});
+  // Show UI immediately — don't block on Supabase
   document.getElementById('authScreen').style.display='none';
   document.getElementById('app').style.display='flex';
   const lbl={client:'عميل',store:'محل',driver:'🚲 مندوب',admin:'إدارة'};
   document.getElementById('roleLabel').textContent=lbl[user.role];
   document.getElementById('topUser').textContent=user.name;
+  // Load data in background (non-blocking)
+  reloadOrders();
+  if(DB_READY) loadStoresFromDB().then(()=>{if(S.role==='client')renderStoresGrid();});
   // Set online status immediately
   setOnline(user);
   // Heartbeat every 15s
