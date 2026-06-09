@@ -1633,6 +1633,10 @@ function saveStSettings(){
   const nw=document.getElementById('pinNew').value.trim();
   if(phone.length>=9){phones[myId]=phone;sSPhones(phones);}
   if(old||nw){if(old!==(pins[myId]||'0000')){toast('الرقم الحالي خاطئ','err');return;}if(nw.length!==4){toast('الرقم الجديد 4 أرقام','err');return;}pins[myId]=nw;sSpins(pins);}
+  // Sync store phone/pin to Supabase
+  if(DB_READY&&myId){
+    _supa.from('drj_stores').update({phone:phone||undefined,pin:nw||undefined}).eq('id',myId).then(({error})=>{if(error)console.error(error);});
+  }
   toast('✅ تم الحفظ');
 }
 function prevImg(inputId,imgId){
@@ -2179,6 +2183,34 @@ function adTab(tab,el){
 }
 
 // ADMIN STORE MANAGEMENT
+// ===== مزامنة المحل مع Supabase =====
+async function syncStoreToSupabase(store){
+  // حفظ محلي أولاً (فوري)
+  const all=gStores();
+  const idx=all.findIndex(s=>s.id===store.id);
+  if(idx>=0)all[idx]=store; else all.push(store);
+  sStores(all);
+  // ثم رفع لـ Supabase
+  if(!DB_READY)return;
+  const{error}=await _supa.from('drj_stores').upsert({
+    id:store.id, name:store.name, icon:store.icon||'🏪',
+    store_desc:store.desc||'', location:store.location||'',
+    phone:store.phone||'', pin:store.pin||'0000',
+    photo:store.photo||null, cats:store.cats||[],
+    store_lat:store.storeLat||null, store_lng:store.storeLng||null,
+    store_address:store.storeAddress||null, is_open:store.isOpen!==false
+  },{onConflict:'id'});
+  if(error)console.error('syncStore error:',error);
+  else await loadStoresFromDB(); // تحديث من Supabase
+}
+
+async function deleteStoreFromSupabase(id){
+  const all=gStores().filter(s=>s.id!==id);sStores(all);
+  if(!DB_READY)return;
+  await _supa.from('drj_stores').delete().eq('id',id);
+  await loadStoresFromDB();
+}
+
 function adAddStore(){
   const name=document.getElementById('nsName').value.trim();
   const icon=document.getElementById('nsIcon').value.trim()||'🏪';
@@ -2189,35 +2221,45 @@ function adAddStore(){
   if(!name){toast('أدخل اسم المحل','err');return;}
   const imgEl=document.getElementById('nsImgPrev');
   const photo=imgEl&&imgEl.style.display!=='none'?imgEl.src:'';
-  const stores=gStores();const id='s'+Date.now();
-  stores.push({id,name,icon,desc,location,cats:[],photo});sStores(stores);
+  const id='s'+Date.now();
+  const newStore={id,name,icon,desc,location,phone,pin,cats:[],photo,isOpen:true};
   const phones=gSPhones();if(phone.length>=9)phones[id]=phone;sSPhones(phones);
   const pins=gSPins();pins[id]=pin;sSpins(pins);
-  toast('✅ تم إضافة المحل');adTab('stores',document.querySelectorAll('#panelAdmin .tab')[1]);
+  syncStoreToSupabase(newStore).then(()=>{
+    adTab('stores',document.querySelectorAll('#panelAdmin .tab')[2]);
+  });
+  toast('✅ تم إضافة المحل — جاري المزامنة...');
 }
 function adDelStore(id){
-  const stores=gStores().filter(s=>s.id!==id);sStores(stores);
-  toast('تم الحذف','warn');adTab('stores',document.querySelectorAll('#panelAdmin .tab')[1]);
+  deleteStoreFromSupabase(id).then(()=>{
+    adTab('stores',document.querySelectorAll('#panelAdmin .tab')[2]);
+  });
+  toast('تم الحذف','warn');
 }
 function adEditStore(id){
   const store=gStores().find(s=>s.id===id);if(!store)return;
-  const phones=gSPhones();const pins=gSPins();
+  const phones=gSPhones();
   const newName=prompt('اسم المحل:',store.name);if(!newName)return;
   const newIcon=prompt('الأيقونة:',store.icon)||store.icon;
   const newDesc=prompt('الوصف:',store.desc||'');
   const newLoc=prompt('الموقع:',store.location||'');
   const newPh=prompt('رقم الجوال:',phones[id]||'');
   store.name=newName;store.icon=newIcon;store.desc=newDesc;store.location=newLoc;
-  const stores=gStores().map(s=>s.id===id?store:s);sStores(stores);
-  if(newPh&&newPh.length>=9){phones[id]=newPh;sSPhones(phones);}
-  toast('✅ تم التعديل');adTab('stores',document.querySelectorAll('#panelAdmin .tab')[1]);
+  if(newPh&&newPh.length>=9){phones[id]=newPh;sSPhones(phones);store.phone=newPh;}
+  syncStoreToSupabase(store).then(()=>{
+    adTab('stores',document.querySelectorAll('#panelAdmin .tab')[2]);
+  });
+  toast('✅ تم التعديل — جاري المزامنة...');
 }
 function adAddCat(storeId){
   const name=prompt('اسم الصنف الرئيسي:');if(!name)return;
   const stores=gStores();const store=stores.find(s=>s.id===storeId);if(!store)return;
   if(!store.cats)store.cats=[];
   store.cats.push({id:'c'+Date.now(),name,subs:[]});
-  sStores(stores);toast('✅ تم إضافة الصنف');adTab('stores',document.querySelectorAll('#panelAdmin .tab')[1]);
+  syncStoreToSupabase(store).then(()=>{
+    adTab('stores',document.querySelectorAll('#panelAdmin .tab')[2]);
+  });
+  toast('✅ تم إضافة الصنف');
 }
 function adAddSub(storeId,catId){
   const name=prompt('اسم الصنف الفرعي:');if(!name)return;
@@ -2229,13 +2271,15 @@ function adAddSub(storeId,catId){
   const cat=store.cats?.find(c=>c.id===catId);if(!cat)return;
   if(!cat.subs)cat.subs=[];
   cat.subs.push({id:'sub'+Date.now(),name,price,stock,img:''});
-  sStores(stores);toast('✅ تم إضافة الصنف الفرعي');adTab('stores',document.querySelectorAll('#panelAdmin .tab')[1]);
+  syncStoreToSupabase(store).then(()=>adTab('stores',document.querySelectorAll('#panelAdmin .tab')[2]));
+  toast('✅ تم إضافة الصنف الفرعي');
 }
 function adDelSub(storeId,catId,subId){
   const stores=gStores();const store=stores.find(s=>s.id===storeId);if(!store)return;
   const cat=store.cats?.find(c=>c.id===catId);if(!cat)return;
-  cat.subs=cat.subs.filter(s=>s.id!==subId);sStores(stores);
-  toast('تم الحذف','warn');adTab('stores',document.querySelectorAll('#panelAdmin .tab')[2]);
+  cat.subs=cat.subs.filter(s=>s.id!==subId);
+  syncStoreToSupabase(store).then(()=>adTab('stores',document.querySelectorAll('#panelAdmin .tab')[2]));
+  toast('تم الحذف','warn');
 }
 
 function adEditSubInline(storeId,catId,subId){
@@ -2274,7 +2318,8 @@ function saveSubEdit(storeId,catId,subId){
   const cat=store?.cats?.find(c=>c.id===catId);
   const sub=cat?.subs?.find(s=>s.id===subId);
   if(sub){sub.name=name;sub.price=price;sub.stock=stock;}
-  sStores(stores);toast('✅ تم التعديل');adTab('stores',document.querySelectorAll('#panelAdmin .tab')[2]);
+  syncStoreToSupabase(store).then(()=>adTab('stores',document.querySelectorAll('#panelAdmin .tab')[2]));
+  toast('✅ تم التعديل');
 }
 function adAddDrv(){
   const name=document.getElementById('ndName').value.trim();
@@ -2501,8 +2546,8 @@ function uploadStorePhoto(storeId, input){
   const r=new FileReader();
   r.onload=e=>{
     const stores=gStores();const s=stores.find(x=>x.id===storeId);
-    if(s){s.photo=e.target.result;sStores(stores);}
-    toast('✅ تم رفع صورة المحل');adTab('stores',document.querySelectorAll('#panelAdmin .tab')[1]);
+    if(s){s.photo=e.target.result;syncStoreToSupabase(s);}
+    toast('✅ تم رفع صورة المحل');adTab('stores',document.querySelectorAll('#panelAdmin .tab')[2]);
   };r.readAsDataURL(file);
 }
 
@@ -2513,8 +2558,8 @@ function uploadSubPhoto(storeId,catId,subId,input){
   r.onload=e=>{
     const stores=gStores();const s=stores.find(x=>x.id===storeId);
     const cat=s?.cats?.find(c=>c.id===catId);const sub=cat?.subs?.find(sb=>sb.id===subId);
-    if(sub){sub.img=e.target.result;sStores(stores);}
-    toast('✅ تم رفع الصورة');adTab('stores',document.querySelectorAll('#panelAdmin .tab')[1]);
+    if(sub){sub.img=e.target.result;if(s)syncStoreToSupabase(s);}
+    toast('✅ تم رفع الصورة');adTab('stores',document.querySelectorAll('#panelAdmin .tab')[2]);
   };r.readAsDataURL(file);
 }
 
@@ -2816,6 +2861,8 @@ function confirmStoreLocation(){
   if(!storeLocMarker||!storeLocId)return;
   const p=storeLocMarker.getLatLng();
   const addr=document.getElementById('storeLocPreview').textContent;
+  const allSt=gStores();const stToUpdate=allSt.find(s=>s.id===storeLocId);
+  if(stToUpdate){stToUpdate.storeLat=p.lat;stToUpdate.storeLng=p.lng;stToUpdate.storeAddress=addr;syncStoreToSupabase(stToUpdate);}
   sStoreLoc(storeLocId,{lat:p.lat,lng:p.lng,address:addr,ts:Date.now()});
   toast('✅ تم حفظ موقع المحل');closeStoreLocPicker();
   adTab('stores',document.querySelectorAll('#panelAdmin .tab')[2]);
