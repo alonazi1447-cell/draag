@@ -2542,6 +2542,8 @@ function downloadExcelTemplate(){
   const blob=new Blob([content],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='نموذج_منتجات_دراج.csv';a.click();
 }
+
+function adResetClientPin(i){
   const cls=gClients();const newPin=prompt(`رقم سري جديد للعميل ${cls[i].name} (6 أرقام):`);
   if(!newPin||newPin.length!==6){toast('الرقم يجب أن يكون 6 أرقام','err');return;}
   cls[i].pin=newPin;sClients(cls);
