@@ -849,21 +849,29 @@ function goHome(){
   S.cart=[];S.role=null;S.user=null;S.activeOrder=null;
 }
 function showAuth(role){
-  authRole=role;
-  document.getElementById('homeScreen').style.display='none';
-  document.getElementById('authScreen').style.display='block';
-  const icons={client:'🛍️',store:'🏪',driver:'🚲',admin:'📊'};
-  const titles={client:'أهلاً بك! 👋',store:'دخول المحل',driver:'دخول المندوب',admin:'لوحة الإدارة'};
-  const subs={client:'ادخل برقم جوالك للطلب من المحلات',store:'',driver:'',admin:''};
-  document.getElementById('authIcon').textContent=icons[role];
-  document.getElementById('authTitle').textContent=titles[role];
-  document.getElementById('authSub').textContent=subs[role]||'';
-  const tr=document.getElementById('authTabsRow');
-  if(role==='client'){
-    tr.style.display='none';
-    renderClientLogin();
+  try{
+    authRole=role;
+    var hs=document.getElementById('homeScreen');
+    var as=document.getElementById('authScreen');
+    if(hs)hs.style.display='none';
+    if(as)as.style.display='block';
+    const icons={client:'🛍️',store:'🏪',driver:'🚲',admin:'📊'};
+    const titles={client:'أهلاً بك! 👋',store:'دخول المحل',driver:'دخول المندوب',admin:'لوحة الإدارة'};
+    const subs={client:'ادخل برقم جوالك للطلب من المحلات',store:'',driver:'',admin:''};
+    var authIcon=document.getElementById('authIcon');
+    var authTitle=document.getElementById('authTitle');
+    var authSub=document.getElementById('authSub');
+    if(authIcon)authIcon.textContent=icons[role];
+    if(authTitle)authTitle.textContent=titles[role];
+    if(authSub)authSub.textContent=subs[role]||'';
+    const tr=document.getElementById('authTabsRow');
+    if(tr)tr.style.display='none';
+    if(role==='client') renderClientLogin();
+    else renderSimpleLogin(role);
+  }catch(e){
+    alert('خطأ: '+e.message);
+    console.error('showAuth error:',e);
   }
-  else{tr.style.display='none';renderSimpleLogin(role);}
 }
 function authSwitch(mode){
   document.getElementById('tabLog').classList.toggle('active',mode==='log');
@@ -2866,7 +2874,21 @@ function toast(msg,type=''){
 }
 
 
-// Load Leaflet and Supabase after page is ready - won't block UI
+// Global error handler — shows errors on screen for debugging
+window.onerror=function(msg,src,line,col,err){
+  console.error('JS Error:',msg,'at',src,line,col);
+  // Show on screen if app not loaded yet
+  var hs=document.getElementById('homeScreen');
+  if(hs&&hs.style.display!=='none'){
+    var errDiv=document.createElement('div');
+    errDiv.style.cssText='position:fixed;bottom:10px;left:10px;right:10px;background:#FF3B30;color:#fff;padding:10px;border-radius:10px;font-size:11px;z-index:99999;direction:ltr;';
+    errDiv.textContent='Error: '+msg+' (line '+line+')';
+    errDiv.onclick=function(){this.remove();};
+    document.body.appendChild(errDiv);
+    setTimeout(function(){if(errDiv.parentNode)errDiv.remove();},8000);
+  }
+  return false;
+};
 setTimeout(function(){
   // Leaflet CSS
   var lc=document.createElement('link');
