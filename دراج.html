@@ -2,7 +2,11 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#7C3AED">
 <title>دراج - توصيل سريع</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
@@ -39,7 +43,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 #homeScreen{display:block;min-height:100vh;background:linear-gradient(160deg,#fff8f0,#edfbf4,#fffde6);}
 .home-top{padding:26px 20px 10px;text-align:center;}
 .home-logo{font-size:32px;font-weight:900;background:linear-gradient(135deg,var(--or),var(--gr));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.hero-btn{margin:14px 18px;background:linear-gradient(135deg,#7C3AED,#9F67FF);border-radius:24px;padding:28px 18px;text-align:center;cursor:pointer;box-shadow:0 10px 36px rgba(124,58,237,.32);border:3px solid rgba(255,255,255,.45);position:relative;overflow:hidden;transition:transform .18s;}
+.hero-btn{margin:14px 18px;background:linear-gradient(135deg,#7C3AED,#9F67FF);border-radius:24px;padding:28px 18px;text-align:center;cursor:pointer;box-shadow:0 10px 36px rgba(124,58,237,.32);border:3px solid rgba(255,255,255,.45);position:relative;overflow:hidden;transition:transform .18s;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
 .hero-btn:active{transform:scale(.98);}
 .hero-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent);}
 .hero-icon{font-size:66px;margin-bottom:8px;animation:hf 3s ease-in-out infinite;position:relative;}
@@ -48,7 +52,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 .hero-sub{font-size:13px;color:rgba(255,255,255,.88);margin-top:4px;position:relative;}
 .hero-badge{display:inline-block;background:rgba(255,255,255,.22);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-top:10px;position:relative;}
 .sm-roles{display:flex;gap:10px;padding:0 18px 28px;justify-content:center;}
-.sm-btn{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:13px 8px;text-align:center;cursor:pointer;flex:1;max-width:90px;transition:all .18s;box-shadow:var(--sh);}
+.sm-btn{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:13px 8px;text-align:center;cursor:pointer;flex:1;max-width:90px;transition:all .18s;box-shadow:var(--sh);-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
 .sm-btn:active{transform:scale(.97);border-color:var(--gr);}
 .sm-icon{font-size:22px;margin-bottom:4px;}
 .sm-name{font-size:11px;font-weight:800;color:var(--bk);}
