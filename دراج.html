@@ -12,7 +12,7 @@
 :root{
   --or:#7C3AED;--or2:#9F67FF;--or3:#F5F0FF;
   --gr:#43A868;--gr2:#6DC98A;--gr3:#EAF7EF;
-  --ye:#F5C518;--ye2:#FFE066;--ye3:#FFFBE6;
+  --ye:#F5C518;--ye2:#FFD000;--ye3:#FFF8DC;
   --bk:#181818;--bg:#F6FAF6;
   --card:#FFF;--card2:#F3F8F3;
   --border:#C8E6D0;--border2:#DDD0FF;
@@ -37,10 +37,11 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 @keyframes bdc{to{transform:translateY(-10px);opacity:.3;}}
 
 /* HOME */
-#homeScreen{display:block;min-height:100vh;background:linear-gradient(160deg,#fff8f0,#edfbf4,#fffde6);}
-.home-top{padding:26px 20px 10px;text-align:center;}
+#homeScreen{display:block;min-height:100vh;background:linear-gradient(160deg,#EDE8FF,#F0EAFF,#E8E0FF);}
+#homeScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.home-top{padding:10px 20px;text-align:center;width:100%;max-width:400px;}
 .home-logo{font-size:32px;font-weight:900;background:linear-gradient(135deg,var(--or),var(--gr));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.hero-btn{margin:14px 18px;background:linear-gradient(135deg,#7C3AED,#9F67FF);border-radius:24px;padding:28px 18px;text-align:center;cursor:pointer;box-shadow:0 10px 36px rgba(124,58,237,.32);border:3px solid rgba(255,255,255,.45);position:relative;overflow:hidden;transition:transform .18s;}
+.hero-btn{margin:14px 18px;background:linear-gradient(135deg,#F5C518,#FFD700);border-radius:24px;padding:28px 18px;text-align:center;cursor:pointer;box-shadow:0 10px 36px rgba(124,58,237,.32);border:3px solid rgba(255,255,255,.45);position:relative;overflow:hidden;transition:transform .18s;}
 .hero-btn:active{transform:scale(.98);}
 .hero-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent);}
 .hero-icon{font-size:66px;margin-bottom:8px;animation:hf 3s ease-in-out infinite;position:relative;}
@@ -49,7 +50,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 .hero-sub{font-size:13px;color:rgba(255,255,255,.88);margin-top:4px;position:relative;}
 .hero-badge{display:inline-block;background:rgba(255,255,255,.22);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-top:10px;position:relative;}
 .sm-roles{display:flex;gap:10px;padding:0 18px 28px;justify-content:center;}
-.sm-btn{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:13px 8px;text-align:center;cursor:pointer;flex:1;max-width:90px;transition:all .18s;box-shadow:var(--sh);}
+.sm-btn{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:16px 10px;text-align:center;cursor:pointer;flex:1;max-width:110px;transition:all .18s;box-shadow:var(--sh);}
 .sm-btn:active{transform:scale(.97);border-color:var(--gr);}
 .sm-icon{font-size:22px;margin-bottom:4px;}
 .sm-name{font-size:11px;font-weight:800;color:var(--bk);}
@@ -93,7 +94,7 @@ select{background:var(--card);border:2px solid var(--border);border-radius:13px;
 .tb-l{display:flex;align-items:center;gap:7px;}
 .tb-logo{font-size:20px;font-weight:900;color:#fff;}
 .tb-role{background:rgba(0,0,0,.14);color:#fff;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
-.tb-user{background:rgba(255,255,255,.18);color:#fff;padding:3px 9px;border-radius:20px;font-size:11px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tb-user{background:rgba(26,26,46,.12);color:#1A1A2E;padding:3px 9px;border-radius:20px;font-size:11px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .tb-back{background:rgba(255,255,255,.18);border:none;color:#fff;padding:5px 10px;border-radius:10px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:12px;}
 
 .panel{display:none;flex:1;padding:12px;max-width:600px;margin:0 auto;width:100%;}
