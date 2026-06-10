@@ -28,7 +28,7 @@
 body{background:var(--bg);color:var(--text);min-height:100vh;}
 
 /* SPLASH */
-#splash{display:none!important;}
+
 .sp-icon{font-size:80px;animation:spf 2s ease-in-out infinite;}
 @keyframes spf{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
 .sp-logo{font-size:58px;font-weight:900;background:linear-gradient(135deg,var(--or),var(--gr));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-top:6px;}
@@ -309,11 +309,7 @@ select{background:var(--card);border:2px solid var(--border);border-radius:13px;
 <body>
 
 <!-- SPLASH -->
-<div id="splash" style="cursor:pointer;" onclick="this.style.display='none';document.getElementById('homeScreen').style.display='block';" title="اضغط للمتابعة">
-  <div class="sp-icon">🚴</div>
-  <div class="sp-logo">دراج</div>
-  <div class="sp-dots"><span></span><span></span><span></span></div>
-</div>
+
 
 <!-- HOME -->
 <div id="homeScreen">
@@ -571,7 +567,7 @@ select{background:var(--card);border:2px solid var(--border);border-radius:13px;
   </div>
 </div>
 
-<button class="cart-fab" id="cartFab" onclick="showCV('cvCart')">
+<button class="cart-fab" id="cartFab" style="display:none;" onclick="showCV('cvCart')">
   🛒 السلة <div class="cart-bdg" id="cartBdg">0</div>
   <span id="cartFabTotal">0 ر</span>
 </button>
