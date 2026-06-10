@@ -2860,18 +2860,26 @@ function toast(msg,type=''){
   const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(type?' '+type:'');
   t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);
 }
+
+
+// Load Leaflet and Supabase after page is ready - won't block UI
+setTimeout(function(){
+  // Leaflet CSS
+  var lc=document.createElement('link');
+  lc.rel='stylesheet';
+  lc.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+  document.head.appendChild(lc);
+  // Leaflet JS  
+  var ls=document.createElement('script');
+  ls.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+  document.body.appendChild(ls);
+  // Supabase
+  var ss=document.createElement('script');
+  ss.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+  ss.onload=function(){if(typeof initSupabase==='function')initSupabase();};
+  document.body.appendChild(ss);
+},100);
 </script>
-<script>
-// Load external libs async — page shows immediately
-(function(){
-  function loadJS(src,cb){var s=document.createElement('script');s.src=src;if(cb)s.onload=cb;document.body.appendChild(s);}
-  function loadCSS(href){var l=document.createElement('link');l.rel='stylesheet';l.href=href;document.head.appendChild(l);}
-  loadCSS('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-  loadJS('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
-  loadJS('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js', function(){
-    if(typeof initSupabase==='function') initSupabase();
-  });
-})();
-</script>
+
 </body>
 </html>
