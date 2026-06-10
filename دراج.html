@@ -8,7 +8,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#7C3AED">
 <title>دراج - توصيل سريع</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -43,7 +42,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 #homeScreen{display:block;min-height:100vh;background:linear-gradient(160deg,#fff8f0,#edfbf4,#fffde6);}
 .home-top{padding:26px 20px 10px;text-align:center;}
 .home-logo{font-size:32px;font-weight:900;background:linear-gradient(135deg,var(--or),var(--gr));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.hero-btn{margin:14px 18px;background:linear-gradient(135deg,#7C3AED,#9F67FF);border-radius:24px;padding:28px 18px;text-align:center;cursor:pointer;box-shadow:0 10px 36px rgba(124,58,237,.32);border:3px solid rgba(255,255,255,.45);position:relative;overflow:hidden;transition:transform .18s;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
+.hero-btn{display:block;width:calc(100% - 36px);margin:14px 18px;background:linear-gradient(135deg,#7C3AED,#9F67FF);border:none;border-radius:24px;font-family:'Tajawal',sans-serif;-webkit-tap-highlight-color:transparent;padding:28px 18px;text-align:center;cursor:pointer;box-shadow:0 10px 36px rgba(124,58,237,.32);border:3px solid rgba(255,255,255,.45);position:relative;overflow:hidden;transition:transform .18s;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
 .hero-btn:active{transform:scale(.98);}
 .hero-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent);}
 .hero-icon{font-size:66px;margin-bottom:8px;animation:hf 3s ease-in-out infinite;position:relative;}
@@ -52,7 +51,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;}
 .hero-sub{font-size:13px;color:rgba(255,255,255,.88);margin-top:4px;position:relative;}
 .hero-badge{display:inline-block;background:rgba(255,255,255,.22);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-top:10px;position:relative;}
 .sm-roles{display:flex;gap:10px;padding:0 18px 28px;justify-content:center;}
-.sm-btn{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:13px 8px;text-align:center;cursor:pointer;flex:1;max-width:90px;transition:all .18s;box-shadow:var(--sh);-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
+.sm-btn{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:13px 8px;text-align:center;cursor:pointer;flex:1;max-width:90px;transition:all .18s;box-shadow:var(--sh);font-family:'Tajawal',sans-serif;-webkit-tap-highlight-color:transparent;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
 .sm-btn:active{transform:scale(.97);border-color:var(--gr);}
 .sm-icon{font-size:22px;margin-bottom:4px;}
 .sm-name{font-size:11px;font-weight:800;color:var(--bk);}
@@ -166,7 +165,7 @@ select{background:var(--card);border:2px solid var(--border);border-radius:13px;
 .qnum{font-size:13px;font-weight:800;min-width:16px;text-align:center;}
 
 /* CART */
-.cart-fab{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#7C3AED,#9F67FF);color:#fff;border:none;padding:13px 32px;border-radius:28px;font-size:15px;font-weight:800;font-family:'Tajawal',sans-serif;cursor:pointer;box-shadow:0 7px 26px rgba(124,58,237,.38);display:none;align-items:center;gap:9px;z-index:50;border:3px solid rgba(255,255,255,.32);}
+.cart-fab{display:none;position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#7C3AED,#9F67FF);color:#fff;border:none;padding:13px 32px;border-radius:28px;font-size:15px;font-weight:800;font-family:'Tajawal',sans-serif;cursor:pointer;box-shadow:0 7px 26px rgba(124,58,237,.38);display:none;align-items:center;gap:9px;z-index:50;border:3px solid rgba(255,255,255,.32);}
 .cart-bdg{background:#fff;color:var(--or);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;}
 
 /* CART PAGE */
@@ -317,16 +316,16 @@ select{background:var(--card);border:2px solid var(--border);border-radius:13px;
     <div class="home-logo">🚴 دراج</div>
     <div style="font-size:12px;color:var(--text3);margin-top:2px;">توصيل سريع • الخرج</div>
   </div>
-  <div class="hero-btn" onclick="showAuth('client')">
+  <button class="hero-btn" onclick="showAuth('client')" type="button">
     <div class="hero-icon">🛍️</div>
     <div class="hero-title">اطلب من هنا</div>
     <div class="hero-sub">من أقرب المحلات لباب بيتك</div>
     <div class="hero-badge">✨ اضغط وابدأ الآن</div>
-  </div>
+  </button>
   <div class="sm-roles">
-    <div class="sm-btn" onclick="showAuth('store')"><div class="sm-icon">🏪</div><div class="sm-name">محل تجاري</div><div class="sm-desc">استقبل طلبات</div></div>
-    <div class="sm-btn" onclick="showAuth('driver')"><div class="sm-icon">🚲</div><div class="sm-name">مندوب</div><div class="sm-desc">وصّل واكسب</div></div>
-    <div class="sm-btn" onclick="showAuth('admin')"><div class="sm-icon">📊</div><div class="sm-name">الإدارة</div><div class="sm-desc">لوحة التحكم</div></div>
+    <button class="sm-btn" onclick="showAuth('store')" type="button"><div class="sm-icon">🏪</div><div class="sm-name">محل تجاري</div><div class="sm-desc">استقبل طلبات</div></button>
+    <button class="sm-btn" onclick="showAuth('driver')" type="button"><div class="sm-icon">🚲</div><div class="sm-name">مندوب</div><div class="sm-desc">وصّل واكسب</div></button>
+    <button class="sm-btn" onclick="showAuth('admin')" type="button"><div class="sm-icon">📊</div><div class="sm-name">الإدارة</div><div class="sm-desc">لوحة التحكم</div></button>
   </div>
 </div>
 
@@ -605,7 +604,7 @@ function initSupabase(){
 
 function showConfigBanner(){
   const b=document.createElement('div');
-  b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#FF6B35;color:#fff;padding:10px 16px;font-size:12px;font-weight:700;text-align:center;font-family:Tajawal,sans-serif;';
+  b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99;background:#FF6B35;color:#fff;padding:6px 16px;font-size:11px;font-weight:700;text-align:center;font-family:Tajawal,sans-serif;pointer-events:none;';
   b.innerHTML='⚠️ وضع تجريبي — للعمل على أجهزة متعددة: أضف مفتاح Supabase في إعدادات التطبيق';
   document.body.prepend(b);
 }
@@ -2877,7 +2876,7 @@ window.onerror=function(msg,src,line,col,err){
   var hs=document.getElementById('homeScreen');
   if(hs&&hs.style.display!=='none'){
     var errDiv=document.createElement('div');
-    errDiv.style.cssText='position:fixed;bottom:10px;left:10px;right:10px;background:#FF3B30;color:#fff;padding:10px;border-radius:10px;font-size:11px;z-index:99999;direction:ltr;';
+    errDiv.style.cssText='position:fixed;bottom:10px;left:10px;right:10px;background:#FF3B30;color:#fff;padding:10px;border-radius:10px;font-size:11px;z-index:99;direction:ltr;pointer-events:none;';
     errDiv.textContent='Error: '+msg+' (line '+line+')';
     errDiv.onclick=function(){this.remove();};
     document.body.appendChild(errDiv);
