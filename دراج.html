@@ -328,7 +328,6 @@ select{background:var(--card);border:2px solid var(--border);border-radius:13px;
     <button class="sm-btn" onclick="showAuth('admin')" type="button"><div class="sm-icon">📊</div><div class="sm-name">الإدارة</div><div class="sm-desc">لوحة التحكم</div></button>
   </div>
 </div>
-
 <!-- AUTH -->
 <div id="authScreen">
   <button class="auth-back" onclick="goHome()">→ رجوع</button>
@@ -572,6 +571,24 @@ select{background:var(--card);border:2px solid var(--border);border-radius:13px;
 </button>
 
 <script>
+
+// Auto-enter based on URL param
+(function(){
+  try{
+    var p=new URLSearchParams(window.location.search);
+    var r=p.get('role')||localStorage.getItem('drj_entry_role');
+    if(r){
+      localStorage.removeItem('drj_entry_role');
+      window.addEventListener('load',function(){
+        setTimeout(function(){
+          if(typeof showAuth==='function') showAuth(r);
+          else if(typeof enterRole==='function') enterRole(r);
+        },100);
+      });
+    }
+  }catch(e){}
+})();
+
 // ===== SUPABASE CONFIG =====
 // 1. اذهب إلى supabase.com وأنشئ مشروعاً مجانياً
 // 2. من Settings > API انسخ URL و anon key
