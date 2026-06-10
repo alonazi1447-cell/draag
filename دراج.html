@@ -305,7 +305,7 @@ select{background:var(--card);border:2px solid var(--border);border-radius:13px;
 <body>
 
 <!-- SPLASH -->
-<div id="splash">
+<div id="splash" style="cursor:pointer;" onclick="this.style.display='none';document.getElementById('homeScreen').style.display='block';" title="اضغط للمتابعة">
   <div class="sp-icon">🚴</div>
   <div class="sp-logo">دراج</div>
   <div class="sp-dots"><span></span><span></span><span></span></div>
@@ -830,21 +830,16 @@ initSupabase();
 
 // ===== SPLASH =====
 // Splash hides after 1.5s no matter what
-// Splash — يختفي فوراً خلال ثانية واحدة
-window.addEventListener('DOMContentLoaded',function(){
+// Splash — يختفي بعد ثانية واحدة بشكل مضمون
+setTimeout(function(){
   var sp=document.getElementById('splash');
   var hs=document.getElementById('homeScreen');
-  if(sp){
-    setTimeout(function(){
-      sp.style.transition='opacity 0.3s';
-      sp.style.opacity='0';
-      setTimeout(function(){
-        sp.style.display='none';
-        if(hs)hs.style.display='block';
-      },300);
-    },800);
-  }
-});
+  if(sp){sp.style.opacity='0';sp.style.transition='opacity 0.3s';}
+  setTimeout(function(){
+    if(sp)sp.style.display='none';
+    if(hs)hs.style.display='block';
+  },350);
+},900);
 
 // ===== INIT =====
 initStores();
