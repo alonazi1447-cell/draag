@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دراج - توصيل سريع</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:Tajawal,Arial;background:linear-gradient(160deg,#EDE8FF,#F0EAFF);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+.logo-wrap{text-align:center;margin-bottom:8px;}
+.logo{font-size:52px;font-weight:900;color:#7C3AED;}
+.logo span{color:#F5C518;}
+.sub{color:#888;font-size:14px;margin-bottom:32px;text-align:center;}
+.btn{display:block;width:100%;max-width:360px;margin:10px auto;padding:18px 20px;border:none;border-radius:18px;font-size:19px;font-weight:900;cursor:pointer;font-family:Tajawal,Arial;transition:transform .15s;-webkit-tap-highlight-color:transparent;}
+.btn:active{transform:scale(.97);}
+.btn-client{background:linear-gradient(135deg,#F5C518,#FFD000);color:#1A1A2E;box-shadow:0 6px 20px rgba(245,197,24,.4);}
+.btn-store{background:#fff;border:2.5px solid #7C3AED;color:#7C3AED;box-shadow:0 4px 14px rgba(124,58,237,.15);}
+.btn-driver{background:#fff;border:2.5px solid #7C3AED;color:#7C3AED;box-shadow:0 4px 14px rgba(124,58,237,.15);}
+.btn-admin{background:#fff;border:2.5px solid #bbb;color:#666;}
+</style>
+</head>
+<body>
+<div class="logo-wrap">
+  <div class="logo">🚲 <span>دراج</span></div>
+</div>
+<div class="sub">توصيل سريع • الخرج</div>
+<button class="btn btn-client" onclick="go('client')">🛍️ اطلب من هنا</button>
+<button class="btn btn-store" onclick="go('store')">🏪 محل تجاري</button>
+<button class="btn btn-driver" onclick="go('driver')">🚲 مندوب</button>
+<button class="btn btn-admin" onclick="go('admin')">📊 الإدارة</button>
+<script>
+function go(role){
+  localStorage.setItem('drj_entry_role',role);
+  window.location.replace('%D8%AF%D8%B1%D8%A7%D8%AC.html?role='+role);
+}
+</script>
+</body>
+</html>
